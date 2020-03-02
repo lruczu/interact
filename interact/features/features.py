@@ -1,3 +1,4 @@
+import enum
 from functools import reduce
 from typing import List, Tuple
 
@@ -8,6 +9,9 @@ from interact.exceptions import DuplicateFeature, UnexpectedFeatureInInteraction
 
 
 class Feature:
+	def get_name(self) -> str:
+		raise NotImplementedError
+
 	def get_full_name(self) -> str:
 		raise NotImplementedError
 
@@ -20,6 +24,9 @@ class DenseFeature(Feature):
 	):
 		self.name = name
 		self.dtype = dtype
+
+	def get_name(self) -> str:
+		return self.name
 
 	def get_full_name(self) -> str:
 		return f'{self.name}: {self.dtype} of shape (None, 1)'
@@ -42,11 +49,16 @@ class SparseFeature(Feature):
 		dtype: str = 'int32',
 		group: str = 'default',
 	):
+		if vocabulary_size < m:
+			raise ValueError('m cannot be bigger than vocabulary size.')
 		self.name = name
 		self.vocabulary_size = vocabulary_size
 		self.m = m
 		self.dtype = dtype
 		self.group = group
+
+	def get_name(self) -> str:
+		return self.name
 
 	def get_full_name(self) -> str:
 		return f'{self.name}: {self.dtype} of shape (None, {self.m})'
@@ -60,14 +72,10 @@ class SparseFeature(Feature):
 		return str(self.__dict__)
 
 
-class DenseFeatureCollection:
-	def __init__(self, features: List[DenseFeature]):
-		self.features = features
-
-
-class SparseFeatureCollection:
-	def __init__(self, features: List[SparseFeature]):
-		self.features = features
+class InteractionType(enum.Enum):
+	DENSE = "Dense"
+	SPARSE = "Sparse"
+	MIXED = "Mixed"
 
 
 class FeatureCollection:
@@ -76,27 +84,45 @@ class FeatureCollection:
 		features: List[Feature],
 		interactions: List[Tuple[Feature, ...]],
 	):
-		self.features = features
-		self.interactions = interactions
+		self._features = features
+		self._interactions = interactions
 
 		self._check_input()
 
-		self._feature_names = [f.name for f in self.features]
-		self._dense_indices = [index for index, f in enumerate(self.features) if isinstance(f, DenseFeature)]
-		self._sparse_indices = [index for index, f in enumerate(self.features) if isinstance(f, SparseFeature)]
+		self._feature_names = [f.get_name() for f in self._features]
+		self._dense_indices = [index for index, f in enumerate(self._features) if isinstance(f, DenseFeature)]
+		self._sparse_indices = [index for index, f in enumerate(self._features) if isinstance(f, SparseFeature)]
 		self._interactions_indices = [
 			tuple([
-				self._feature_names.index(f.name) for f in i
-			]) for i in self.interactions
+				self._feature_names.index(f.get_name()) for f in i
+			]) for i in self._interactions
+		]
+		self._interactions_types = []
+		for i in self._interactions:
+			types = [
+				InteractionType.DENSE if isinstance(f, DenseFeature)
+				else InteractionType.SPARSE
+				for f in i
+			]
+			types = list(set(types))
+			if len(types) > 1:
+				self._interactions_types.append(InteractionType.MIXED)
+			else:
+				self._interactions_types.append(types[0])
+		self._inputs = [
+			Input(shape=1)
+			if isinstance(f, DenseFeature)
+			else Input(shape=f.m, dtype=tf.int32)
+			for f in self._features
 		]
 
 	def _check_input(self):
-		all_names_from_features = [f.name for f in self.features]
+		all_names_from_features = [f.get_name() for f in self._features]
 
 		all_names_from_interactions = reduce(
 			lambda arg1, arg2: arg1 + arg2,
-			[[f.name for f in interaction] for interaction in self.interactions]) \
-			if len(self.interactions) else []
+			[[f.get_name() for f in interaction] for interaction in self._interactions]) \
+			if len(self._interactions) else []
 
 		if len(all_names_from_features) != len(set(all_names_from_features)):
 			raise DuplicateFeature
@@ -105,25 +131,26 @@ class FeatureCollection:
 		if unexpected_features:
 			raise UnexpectedFeatureInInteractions
 
-		for interaction in self.interactions:
+		for interaction in self._interactions:
 			if len(interaction) < 2:
 				raise InteractionWithOnlyOneVariable
 
 	def model_inputs_schema(self) -> List[str]:
-		return [f.get_full_name() for f in self.features]
+		return [f.get_full_name() for f in self._features]
 
 	def get_dense_features(self) -> List[DenseFeature]:
-		return [f for f in self.features if isinstance(f, DenseFeature)]
+		return [f for f in self._features if isinstance(f, DenseFeature)]
 
 	def get_sparse_features(self) -> List[SparseFeature]:
-		return [f for f in self.features if isinstance(f, SparseFeature)]
+		return [f for f in self._features if isinstance(f, SparseFeature)]
 
-	def get_dense_indices(self):
-		pass
+	def get_interactions(self) -> List[Tuple[InteractionType, Tuple[Input]]]:
+		for t, indices in zip(self._interactions_types, self._interactions_indices):
+			yield t, [self._inputs[index] for index in indices]
 
 	def produce_inputs(self) -> List[Input]:
 		return [
 			Input(shape=1) if isinstance(f, DenseFeature)
 			else Input(shape=f.m, dtype=tf.int32)
-			for f in self.features
+			for f in self._features
 		]

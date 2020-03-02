@@ -1,8 +1,12 @@
-from .exceptions import DuplicateFeature, UnexpectedFeatureInInteractions, InteractionWithOnlyOneVariable
+from .exceptions import (DuplicateFeature,
+                         InteractionWithOnlyOneVariable,
+                         NoFeatureProvided,
+                         UnexpectedFeatureInInteractions)
 
 
 __all__ = [
     'DuplicateFeature',
-    'UnexpectedFeatureInInteractions',
     'InteractionWithOnlyOneVariable',
+    'NoFeatureProvided',
+    'UnexpectedFeatureInInteractions',
 ]

@@ -1,3 +1,8 @@
+class NoFeatureProvided(Exception):
+    """At least one feature must be provided."""
+    pass
+
+
 class DuplicateFeature(Exception):
     """All feature must be specified exactly once."""
     pass

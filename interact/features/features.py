@@ -1,11 +1,16 @@
 import enum
 from functools import reduce
-from typing import List, Tuple
+from typing import List, Seq, Tuple
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input
 
-from interact.exceptions import DuplicateFeature, UnexpectedFeatureInInteractions, InteractionWithOnlyOneVariable
+from interact.exceptions import (
+	DuplicateFeature,
+	InteractionWithOnlyOneVariable,
+	NoFeatureProvided,
+	UnexpectedFeatureInInteractions
+)
 
 
 class Feature:
@@ -89,6 +94,8 @@ class FeatureCollection:
 
 		self._check_input()
 
+		self.global_features_type: InteractionType = self._get_features_type(features)
+
 		self._feature_names = [f.get_name() for f in self._features]
 		self._dense_indices = [index for index, f in enumerate(self._features) if isinstance(f, DenseFeature)]
 		self._sparse_indices = [index for index, f in enumerate(self._features) if isinstance(f, SparseFeature)]
@@ -97,18 +104,10 @@ class FeatureCollection:
 				self._feature_names.index(f.get_name()) for f in i
 			]) for i in self._interactions
 		]
-		self._interactions_types = []
-		for i in self._interactions:
-			types = [
-				InteractionType.DENSE if isinstance(f, DenseFeature)
-				else InteractionType.SPARSE
-				for f in i
-			]
-			types = list(set(types))
-			if len(types) > 1:
-				self._interactions_types.append(InteractionType.MIXED)
-			else:
-				self._interactions_types.append(types[0])
+		self._interactions_types = [
+			self._get_features_type(i) for i in self._interactions
+		]
+
 		self._inputs = [
 			Input(shape=1)
 			if isinstance(f, DenseFeature)
@@ -117,6 +116,9 @@ class FeatureCollection:
 		]
 
 	def _check_input(self):
+		if not len(self._features):
+			raise NoFeatureProvided
+
 		all_names_from_features = [f.get_name() for f in self._features]
 
 		all_names_from_interactions = reduce(
@@ -144,13 +146,20 @@ class FeatureCollection:
 	def get_sparse_features(self) -> List[SparseFeature]:
 		return [f for f in self._features if isinstance(f, SparseFeature)]
 
-	def get_interactions(self) -> List[Tuple[InteractionType, Tuple[Input]]]:
+	def get_interactions(self) -> List[Tuple[InteractionType, Tuple[Feature], Tuple[Input]]]:
 		for t, indices in zip(self._interactions_types, self._interactions_indices):
 			yield t, [self._inputs[index] for index in indices]
 
-	def produce_inputs(self) -> List[Input]:
-		return [
-			Input(shape=1) if isinstance(f, DenseFeature)
-			else Input(shape=f.m, dtype=tf.int32)
-			for f in self._features
+	def get_inputs(self) -> List[Input]:
+		return self._inputs
+
+	def _get_features_type(self, features: Seq[Feature]):
+		types = [
+			InteractionType.DENSE if isinstance(f, DenseFeature)
+			else InteractionType.SPARSE
+			for f in features
 		]
+		types = list(set(types))
+		if len(types) > 1:
+			return InteractionType.MIXED
+		return types[0]

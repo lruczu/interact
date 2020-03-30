@@ -1,12 +1,14 @@
 from .exceptions import (DuplicateFeature,
-                         InteractionWithOnlyOneVariable,
                          NoFeatureProvided,
-                         UnexpectedFeatureInInteractions)
-
+                         NoFeatureProvidedInInteraction,
+                         UnexpectedFeatureInInteractions,
+                         SingleDenseFeatureInInteraction
+                         )
 
 __all__ = [
     'DuplicateFeature',
-    'InteractionWithOnlyOneVariable',
     'NoFeatureProvided',
+    'NoFeatureProvidedInInteraction',
     'UnexpectedFeatureInInteractions',
+    'SingleDenseFeatureInInteraction',
 ]

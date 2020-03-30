@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
@@ -17,7 +18,7 @@ def test_mask_embedding():
         [1, 1, 1, 1, 1]
     ]
     o1 = m.predict(i1)
-    assert o1 == expected_o1
+    assert np.all(o1 == expected_o1)
 
     i2 = [[1, 0, 1]]
     expected_o2 = [
@@ -26,7 +27,7 @@ def test_mask_embedding():
         [1, 1, 1, 1, 1]
     ]
     o2 = m.predict(i2)
-    assert o2 == expected_o2
+    assert np.all(o2 == expected_o2)
 
     i3 = [[0, 0, 0]]
     expected_o3 = [
@@ -35,4 +36,4 @@ def test_mask_embedding():
         [0, 0, 0, 0, 0]
     ]
     o3 = m.predict(i3)
-    assert o3 == expected_o3
+    assert np.all(o3 == expected_o3)

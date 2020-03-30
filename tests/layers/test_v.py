@@ -3,24 +3,24 @@ import tensorflow as tf
 from tensorflow.keras.layers import Concatenate, Input
 from tensorflow.keras.models import Model
 
+from interact.features import DenseFeature, Interaction
 from interact.layers import V
 
 
 def test_v():
-    i1 = Input(shape=1, dtype=tf.int32)
-    i2 = Input(shape=1, dtype=tf.int32)
-    i3 = Input(shape=1, dtype=tf.int32)
-    i = Concatenate()([i1, i2, i3])
+    i1 = Input(shape=1, dtype=tf.float32)
+    i2 = Input(shape=1, dtype=tf.float32)
+    i3 = Input(shape=1, dtype=tf.float32)
     k = 20
     weights = np.random.uniform(size=(3, k))
 
-    v = V(k)
-    o = v(i)
-    o.set_weights([weights])
-    m = Model(i, o)
+    v = V(Interaction([DenseFeature('df1'), DenseFeature('df2'), DenseFeature('df3')], k=k))
+    o = v([i1, i2, i3])
+    m = Model([i1, i2, i3], o)
+    m.set_weights([weights])
 
     v1, v2, v3 = 1.3, 7.2, 9.9
-    i = [
+    i = np.array([
         [0, 0, 0],
         [0, 0, v3],
         [0, v2, 0],
@@ -29,7 +29,7 @@ def test_v():
         [v1, 0, v3],
         [v1, v2, 0],
         [v1, v2, v3]
-    ]
+    ])
     expected_o = [
         [0],
         [0],
@@ -44,5 +44,5 @@ def test_v():
             v1 * v3 * np.sum(weights[0] * weights[2])
         ],
     ]
-    o = m.predict(i)
-    assert np.all(np.isclose(o, expected_o))
+    o = m.predict([i[:, 0], i[:, 1], i[:, 2]])
+    assert np.all(np.isclose(o, expected_o, atol=1e-04))

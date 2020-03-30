@@ -1,12 +1,8 @@
-import warnings
-
 import numpy as np
 import pytest
 from scipy import sparse
 
-
 from interact.utils.sparse import to_sequences
-
 
 
 X = np.zeros(shape=(4, 10000))
@@ -63,5 +59,3 @@ def test_to_sequence_too_long_length():
 	assert (obs2 == 3000).sum() == 1 and (obs2 == 10000).sum() == 1 and (obs2 == 0).sum() == 8
 	assert (obs3 == 4).sum() == 1 and (obs3 == 0).sum() == 9
 	assert obs4.sum() == 0
-
-# pytest >= 4.4.1

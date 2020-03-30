@@ -3,6 +3,11 @@ class NoFeatureProvided(Exception):
     pass
 
 
+class NoFeatureProvidedInInteraction(Exception):
+    """At least one feature must be provided."""
+    pass
+
+
 class DuplicateFeature(Exception):
     """All feature must be specified exactly once."""
     pass
@@ -13,6 +18,6 @@ class UnexpectedFeatureInInteractions(Exception):
     pass
 
 
-class InteractionWithOnlyOneVariable(Exception):
+class SingleDenseFeatureInInteraction(Exception):
     """At least two features are need for interaction."""
     pass

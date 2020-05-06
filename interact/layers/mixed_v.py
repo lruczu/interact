@@ -10,11 +10,9 @@ class MixedV(layers.Layer):
     def __init__(
         self,
         interaction: Interaction,
-        within: bool = True,
         **kwargs,
     ):
         self._interaction = interaction
-        self._within = within
         if self._interaction.interaction_type != InteractionType.MIXED:
             raise ValueError('Only mixed interaction type is allowed.')
         self._sparse_vs = []
@@ -70,7 +68,6 @@ class MixedV(layers.Layer):
     def call(self, inputs):
         es = []
         dense_inputs = []
-        within_interactions = []
         sparse_index = 0
         for i, f in zip(inputs, self._interaction.features):
             if isinstance(f, DenseFeature):
@@ -78,11 +75,6 @@ class MixedV(layers.Layer):
             elif isinstance(f, SparseFeature):
                 e = self._sparse_vs[sparse_index](i) * self._masks[sparse_index](i)
                 es.append(e)
-                sparse_index += 1
-                if not self._within:
-                    rows_sum = tf.reduce_sum(e, axis=1) ** 2
-                    squared_rows_sum = tf.reduce_sum(e * e, axis=1)
-                    within_interactions.append(0.5 * tf.reduce_sum(rows_sum - squared_rows_sum, axis=1))
             else:
                 raise ValueError('Wrong type of input.')
 
@@ -99,14 +91,15 @@ class MixedV(layers.Layer):
         dense_inputs = tf.expand_dims(dense_inputs, axis=-1) * tf.expand_dims(self._eye, axis=0)
 
         v_dense = tf.matmul(dense_inputs, self._v)
+        return es + [v_dense]
+
         global_v = layers.Concatenate(axis=1)([v_sparse, v_dense])
+
         rows_sum = tf.reduce_sum(global_v, axis=1) ** 2
         squared_rows_sum = tf.reduce_sum(global_v * global_v, axis=1)
 
         all_interactions = 0.5 * tf.reduce_sum(rows_sum - squared_rows_sum, axis=1)
-        if self._within:
-            return all_interactions
-        return all_interactions - tf.math.add_n(within_interactions)
+        return all_interactions
 
     def _update_weights(self):
         ws = self.get_weights()

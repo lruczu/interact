@@ -10,8 +10,9 @@ def test_sparse_linear():
     i = Input(shape=3, dtype=tf.int32)
     sparse_linear = SparseLinear(vocabulary_size=100)
     o = sparse_linear(i)
-    ws = np.random.uniform(size=100)
-    sparse_linear.set_weights([ws.reshape(-1, 1)])
+    ws = np.random.uniform(size=101)
+    _, mask = sparse_linear.get_weights()
+    sparse_linear.set_weights([ws.reshape(-1, 1), mask])
     m = Model(i, o)
 
     i = [
@@ -20,9 +21,9 @@ def test_sparse_linear():
         [1, 50, 100]
     ]
     expected_o = [
-        [ws[0] + ws[1] + ws[9]],
-        [ws[1] + ws[1] + ws[9]],
-        [ws[0] + ws[49] + ws[99]]
+        [ws[1] + ws[2] + ws[10]],
+        [ws[2] + ws[2] + ws[10]],
+        [ws[1] + ws[50] + ws[100]]
     ]
     o = m.predict(i)
     assert np.all(np.isclose(o, expected_o))

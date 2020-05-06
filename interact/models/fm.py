@@ -3,59 +3,52 @@ from typing import List, Tuple
 from tensorflow.keras.layers import Add, Concatenate
 from tensorflow.keras.models import Model
 
-from interact.features import Feature, FeatureCollection, InteractionType
-from interact.layers import AddBias, Linear, SparseLinear, SparseV, V
+from interact.features import Feature, FeatureCollection, Interaction, InteractionType
+from interact.layers import AddBias, Linear, MixedV, SparseLinear, SparseV, V
 
 
-def FactorizationMachine(
+def FM(
     fs: List[Feature],
-    interactions: List[Tuple[Feature,...]],
-    k: int,
+    interactions: List[Interaction],
 ) -> Model:
     fc = FeatureCollection(
         features=fs,
         interactions=interactions,
     )
+
+    assert len(interactions) >= 1
+    assert len(fs) >= 2
+
+    products = []
+    for interaction, inputs in fc.get_interactions():
+        if interaction.interaction_type == InteractionType.DENSE:
+            products.append(V(interaction)(inputs))
+        elif interaction.interaction_type == InteractionType.SPARSE:
+            products.append(SparseV(interaction)(inputs))
+        else:
+            products.append(MixedV(interaction)(inputs))
+
+    if len(products) > 1:
+        interaction_sum = Add()(products)
+    else:
+        interaction_sum = products[0]
+
     dense_inputs = fc.get_dense_inputs()
     sparse_inputs = fc.get_sparse_inputs()
 
-    dense_linear_output = []
-    sparse_linear_output = []
+    linear_part = []
+    if len(dense_inputs) == 1:
+        linear_part.append(Linear()(dense_inputs[0]))
+    elif len(dense_inputs) > 1:
+        linear_part.append(Linear()(Concatenate()(dense_inputs)))
 
-    if len(dense_inputs):
-        dense_linear_output = Linear()(
-                Concatenate()(
-                    dense_inputs
-                )
-            )
-    if len(sparse_inputs):
-        sparse_linear_output = Add()(
-                [SparseLinear()(i) for i in sparse_inputs]
-            )
-    linear_output = AddBias()(
-        Add()([dense_linear_output, sparse_linear_output])
-    )
+    for sparse_input, sparse_f in zip(sparse_inputs, fc.get_sparse_features()):
+        linear_part.append(SparseLinear(sparse_f.vocabulary_size)(sparse_input))
 
-    interaction_outputs = []
-    for interation_type, inputs in fc.get_interactions():
-        if interation_type == InteractionType.DENSE:
-            interaction_outputs.append(
-                V(k=k)(Concatenate(inputs))
-            )
-        elif interation_type == InteractionType.SPARSE:
-            interaction_outputs.append(
-                SparseV(inputs, k=k)(inputs)
-            )
-        elif interation_type == InteractionType.MIXED:
-            pass
+    if len(linear_part) > 1:
+        linear_sum = Add()(linear_part)
+    else:
+        linear_sum = linear_part[0]
 
-    o = Add([linear_output] + interaction_outputs)
-
+    o = AddBias()(Add()([interaction_sum, linear_sum]))
     return Model(fc.get_inputs(), o)
-
-# each feature in interaction brings some V matrix
-# feature can occur a couple of times in feature, each such occurrence brings new V!!!
-# (all dense features are concatenated and V is produced)
-#
-#
-#

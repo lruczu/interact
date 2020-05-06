@@ -1,6 +1,6 @@
-from .factorization_machine import FactorizationMachine
+from .fm import FM
 
 
 __all__ = [
-    'FactorizationMachine'
+    'FM'
 ]

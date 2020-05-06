@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Concatenate, Input
 from tensorflow.keras.models import Model
 
 from interact.features import DenseFeature, Interaction
-from interact.layers import V
+from interact.layers import FM, V
 
 
 def test_v():
@@ -13,11 +13,16 @@ def test_v():
     i3 = Input(shape=1, dtype=tf.float32)
     k = 20
     weights = np.random.uniform(size=(3, k))
+    interaction = Interaction([DenseFeature('df1'), DenseFeature('df2'), DenseFeature('df3')], k=k)
+    v = V(interaction)
+    fm = FM(interaction)
 
-    v = V(Interaction([DenseFeature('df1'), DenseFeature('df2'), DenseFeature('df3')], k=k))
-    o = v([i1, i2, i3])
-    m = Model([i1, i2, i3], o)
-    m.set_weights([weights])
+    e = v([i1, i2, i3])
+    products = fm([e])
+
+    m = Model([i1, i2, i3], products)
+    _, eye = m.get_weights()
+    m.set_weights([weights, eye])
 
     v1, v2, v3 = 1.3, 7.2, 9.9
     i = np.array([

@@ -1,6 +1,12 @@
+from .afm import AFM
+from .autoint import AutoInt
+from .deep_fm import DeepFM
 from .fm import FM
 
 
 __all__ = [
-    'FM'
+    'AFM',
+    'AutoInt',
+    'DeepFM',
+    'FM',
 ]

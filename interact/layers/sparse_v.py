@@ -7,6 +7,10 @@ from interact.layers import MaskEmbedding
 
 
 class SparseV(layers.Layer):
+    """
+    Expects a list of embeddings from sparse features.
+    """
+
     def __init__(
         self,
         interaction: Interaction,

@@ -1,54 +1,41 @@
-from typing import List, Tuple
+from typing import List
 
-from tensorflow.keras.layers import Add, Concatenate
+from tensorflow.keras.layers import Add
 from tensorflow.keras.models import Model
 
-from interact.features import Feature, FeatureCollection, Interaction, InteractionType
-from interact.layers import AddBias, Linear, MixedV, SparseLinear, SparseV, V
+from interact.fields import Field, FieldsManager
+from interact.layers import AddBias, FMInteraction
 
 
 def FM(
-    fs: List[Feature],
-    interactions: List[Interaction],
-) -> Model:
-    fc = FeatureCollection(
-        features=fs,
-        interactions=interactions,
-    )
+    fields: List[Field], 
+    l2_penalty: float = 0, 
+    averaged: bool = False,
+):
+    """
+    Args:
+        fields:
+        l2_penalty:
+        averaged:
+    """
+    FieldsManager.validate_fields(fields)
+    inputs = FieldsManager.fields2inputs(fields)
 
-    assert len(interactions) >= 1
-    assert len(fs) >= 2
+    embeddings = [
+        FieldsManager.input2embedding(i, field, l2_penalty=l2_penalty, averaged=averaged) 
+        for i, field in zip(inputs, fields)
+    ]
 
-    products = []
-    for interaction, inputs in fc.get_interactions():
-        if interaction.interaction_type == InteractionType.DENSE:
-            products.append(V(interaction)(inputs))
-        elif interaction.interaction_type == InteractionType.SPARSE:
-            products.append(SparseV(interaction)(inputs))
-        else:
-            products.append(MixedV(interaction)(inputs))
+    linear_terms = [
+        FieldsManager.input2linear(i, field)
+         for i, field in zip(inputs, fields)
+    ]
 
-    if len(products) > 1:
-        interaction_sum = Add()(products)
-    else:
-        interaction_sum = products[0]
+    fm_interaction = FMInteraction()
 
-    dense_inputs = fc.get_dense_inputs()
-    sparse_inputs = fc.get_sparse_inputs()
+    interactions_part = fm_interaction(embeddings)
+    linear_part = Add()(linear_terms)
 
-    linear_part = []
-    if len(dense_inputs) == 1:
-        linear_part.append(Linear()(dense_inputs[0]))
-    elif len(dense_inputs) > 1:
-        linear_part.append(Linear()(Concatenate()(dense_inputs)))
+    ouput = AddBias()(interactions_part + linear_part)
 
-    for sparse_input, sparse_f in zip(sparse_inputs, fc.get_sparse_features()):
-        linear_part.append(SparseLinear(sparse_f.vocabulary_size)(sparse_input))
-
-    if len(linear_part) > 1:
-        linear_sum = Add()(linear_part)
-    else:
-        linear_sum = linear_part[0]
-
-    o = AddBias()(Add()([interaction_sum, linear_sum]))
-    return Model(fc.get_inputs(), o)
+    return Model(inputs, ouput)

@@ -16,6 +16,7 @@ setup(
         'interact',
         'interact.exceptions',
         'interact.features',
+        'interact.fields',
         'interact.layers',
         'interact.models',
         'interact.utils',

@@ -18,7 +18,7 @@ class SparseLinear(layers.Layer):
 
     def build(self, input_shape: tf.TensorShape):
         if input_shape.ndims != 2:
-            raise ValueError('Unexpected input shape.')
+            raise ValueError('Input shape must be equal to 2.')
 
         m = int(input_shape[1])
         self._linear_weights = layers.Embedding(
@@ -35,6 +35,8 @@ class SparseLinear(layers.Layer):
     def call(self, inputs):
         if inputs.shape.ndims != 2:
             raise ValueError('Unexpected input shape.')
+        
         return tf.reduce_sum(
             self._linear_weights(inputs) * self._mask_embedding(inputs),
-            axis=1)
+            axis=1,
+        )

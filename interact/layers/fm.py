@@ -6,6 +6,9 @@ from interact.features import DenseFeature, Interaction, InteractionType, Sparse
 
 
 class FM(layers.Layer):
+    """
+        Takes a list of embeddings 
+    """
     def __init__(
         self,
         interaction: Interaction,

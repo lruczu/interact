@@ -4,6 +4,9 @@ from tensorflow.python.keras import layers
 
 
 class AddBias(layers.Layer):
+    """
+    Add single number to tensor.
+    """
     def __init__(self, **kwargs):
         self.bias = None
         super(AddBias, self).__init__(**kwargs)

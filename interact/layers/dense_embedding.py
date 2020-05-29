@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.python.keras import initializers, layers
 from tensorflow.keras import regularizers
 
-from interact.fields import DenseField
+#from interact.fields import DenseField
 
 
 class DenseEmbedding(layers.Layer):
@@ -11,7 +11,7 @@ class DenseEmbedding(layers.Layer):
     """
     def __init__(
         self,
-        dense_field: DenseField,
+        dense_field,
         l2_penalty: float = 0,
         **kwargs,
     ):

@@ -10,9 +10,9 @@ from interact.layers import AddBias, AttentionAutoInt, Cartesian, Product
 
 def AutoInt(
     fields: List[Field],
-    l2_penalty: float = 0,
     d_prime: int,
     h: int,
+    l2_penalty: float = 0,
 ):
     FieldsManager.validate_fields(fields)
     inputs = FieldsManager.fields2inputs(fields)

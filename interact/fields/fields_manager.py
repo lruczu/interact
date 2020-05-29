@@ -9,8 +9,8 @@ from interact.layers import DenseEmbedding, Linear, SparseEmbedding, SparseLinea
 
 class FieldsManager:
     @staticmethod
-    def validate_fields(fields: List[Fields]) -> None:
-        if set([field.d for field in fields]) > 1:
+    def validate_fields(fields: List[Field]) -> None:
+        if len(set([field.d for field in fields])) > 1:
             raise ValueError('Fields must have the same embedding dimension.')
 
     @staticmethod

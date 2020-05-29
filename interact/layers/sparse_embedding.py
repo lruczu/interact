@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.python.keras import layers
 from tensorflow.keras import regularizers
 
-from interact.fields import SparseField
+#from interact.fields import SparseField
 from interact.layers import MaskEmbedding
 
 
@@ -17,7 +17,7 @@ class SparseEmbedding(layers.Layer):
     """
     def __init__(
         self,
-        sparse_field: SparseField,
+        sparse_field,
         averaged: bool = False,
         l2_penalty: float = 0,
         flatten: bool = False,

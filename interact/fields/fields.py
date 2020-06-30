@@ -14,7 +14,7 @@ class DenseField(Field):
 		dtype: str = 'float32',
 	):
 		self.name = name
-		self.d = d
+		self.d = int(d)
 		self.dtype = dtype
 
 	def get_name(self) -> str:
@@ -24,7 +24,7 @@ class DenseField(Field):
 		return f'{self.name}: {self.dtype} of shape (None, 1)'
 
 	def __eq__(self, other):
-		if not isinstance(other, Feature):
+		if not isinstance(other, Field):
 			return False
 		return self.get_full_name() == other.get_full_name()
 
@@ -44,9 +44,9 @@ class SparseField(Field):
 		if vocabulary_size < m:
 			raise ValueError('m cannot be bigger than vocabulary size.')
 		self.name = name
-		self.vocabulary_size = vocabulary_size
-		self.m = m
-		self.d = d
+		self.vocabulary_size = int(vocabulary_size)
+		self.m = int(m)
+		self.d = int(d)
 		self.dtype = dtype
 
 	def get_name(self) -> str:
@@ -56,7 +56,7 @@ class SparseField(Field):
 		return f'{self.name}: {self.dtype} of shape (None, {self.m})'
 
 	def __eq__(self, other):
-		if not isinstance(other, Feature):
+		if not isinstance(other, Field):
 			return False
 		return self.get_full_name() == other.get_full_name()
 

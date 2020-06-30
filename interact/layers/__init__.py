@@ -4,7 +4,7 @@ from .attention_afm import AttentionAFM
 from .attention_autoint import AttentionAutoInt
 from .cartesian import Cartesian
 from .dense_embedding import DenseEmbedding
-from .fm import FM
+#from .fm import FM
 from .fm_interaction import FMInteraction
 from .linear import Linear
 from .mask_embedding import MaskEmbedding

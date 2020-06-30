@@ -46,13 +46,14 @@ class FieldsManager:
     def input2linear(
         i: Input, 
         field: Field,
+        alpha: float = 0.001,
     ) -> tf.Tensor:
         if i.dtype != field.dtype:
             raise ValueError('Input and field must have the same type.')
 
         if isinstance(field, DenseField):
-            return Linear()(i)
+            return Linear(alpha=alpha)(i)
         elif isinstance(field, SparseField):
-            return SparseLinear(vocabulary_size=field.vocabulary_size)(i)
+            return SparseLinear(vocabulary_size=field.vocabulary_size, alpha=alpha)(i)
         else:
             raise ValueError('Wrong type of field.')

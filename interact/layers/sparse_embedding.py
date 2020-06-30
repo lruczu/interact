@@ -54,7 +54,20 @@ class SparseEmbedding(layers.Layer):
     def call(self, input):
         e = self._v(input) *  self._mask(input)
         if self._averaged:
-            n_nonzeros = tf.math.count_nonzero(i, axis=1, keepdims=True)
-            n_nonzeros_with_default_for_zero = tf.nn.relu(n_nonzeros - 1) + 1
-            return tf.reduce_sum(e, axis=1, keepdims=True) / n_nonzeros_with_default_for_zero
+            # (None, # of embedding vectors, 1)
+            # zero embeddings will have 0 number of nonzero components
+            zero_embedding_flag = tf.math.reduce_any(e > 0, axis=2, keepdims=True)
+
+            n_nonzero_embeddings = tf.math.count_nonzero(zero_embedding_flag, axis=1, keepdims=True)
+            n_nonzero_embeddings_with_default_for_zero = tf.nn.relu(n_nonzero_embeddings - 1) + 1
+
+            return tf.reduce_sum(e, axis=1, keepdims=True) / tf.cast(n_nonzero_embeddings_with_default_for_zero, tf.float32)
+
+            # n_nonzero_embeddings = tf.math.reduce_sum(
+            #     n_nonzeros_per_embedding_vector > 0, axis=1, keepdims=True)
+
+
+            # #n_nonzeros = tf.math.count_nonzero(input, axis=1, keepdims=True)
+            # n_nonzeros_with_default_for_zero = tf.nn.relu(n_nonzero_embeddings - 1) + 1
+            # return tf.reduce_sum(e, axis=1, keepdims=True) / n_nonzeros_with_default_for_zero
         return e

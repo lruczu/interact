@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.keras import regularizers
 from tensorflow.python.keras import layers
 
 from interact.layers import MaskEmbedding
@@ -10,8 +11,15 @@ class SparseLinear(layers.Layer):
         input: [[1 2 100]]
         output: [w1 + w2 + w100]
     """
-    def __init__(self, vocabulary_size: int, **kwargs):
+    def __init__(
+        self, 
+        vocabulary_size: int,
+        alpha: float = 1,    
+        **kwargs,
+    ):
         self.vocabulary_size = vocabulary_size
+        self._alpha = alpha
+        
         self._linear_weights = None
         self._mask_embedding = None
         super(SparseLinear, self).__init__(**kwargs)
@@ -24,7 +32,9 @@ class SparseLinear(layers.Layer):
         self._linear_weights = layers.Embedding(
             self.vocabulary_size + 1,
             1,
-            input_length=m
+            input_length=m,
+            embeddings_initializer="zeros",
+            embeddings_regularizer=regularizers.l2(self._alpha)
         )
         self._mask_embedding = MaskEmbedding(
             input_dim=self.vocabulary_size,

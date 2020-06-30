@@ -12,7 +12,13 @@ class Linear(layers.Layer):
 
         In terms of shapes: (None, N) -> (None, 1)
     """
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        alpha: float = 1,
+        **kwargs,    
+    ):
+        self._alpha = alpha
+
         self._linear_weights = None
         super(Linear, self).__init__(**kwargs)
 
@@ -23,9 +29,10 @@ class Linear(layers.Layer):
         n_features = int(input_shape[1])
         self._linear_weights = self.add_weight('linear_weights',
                                               shape=[1, n_features],
-                                              initializer=initializers.glorot_uniform())
+                                              initializer=initializers.zeros())
 
     def call(self, inputs):
         if inputs.shape.ndims != 2:
             raise ValueError('Unexpected input shape.')
+        self.add_loss(self._alpha * tf.reduce_sum(self._linear_weights))
         return tf.reduce_sum(inputs * self._linear_weights, axis=1, keepdims=True)

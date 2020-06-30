@@ -34,7 +34,7 @@ def FM(
     fm_interaction = FMInteraction()
 
     interactions_part = fm_interaction(embeddings)
-    linear_part = Add()(linear_terms)
+    linear_part = Add()(linear_terms) if len(linear_terms) > 1 else linear_terms[0]
 
     ouput = AddBias()(interactions_part + linear_part)
 

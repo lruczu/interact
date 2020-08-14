@@ -29,16 +29,17 @@ class FieldsManager:
     def input2embedding(
         i: Input, 
         field: Field, 
-        l2_penalty: float = 0, 
+        l1_penalty: float = 0, 
+        l2_penalty: float = 0,
         averaged: bool = True,
     ) -> tf.Tensor:
         if i.dtype != field.dtype:
             raise ValueError('Input and field must have the same type.')
 
         if isinstance(field, DenseField):
-            return DenseEmbedding(field, l2_penalty=l2_penalty)(i)
+            return DenseEmbedding(field, l1_penalty=l1_penalty, l2_penalty=l2_penalty)(i)
         elif isinstance(field, SparseField):
-            return SparseEmbedding(field, l2_penalty=l2_penalty, averaged=averaged)(i)
+            return SparseEmbedding(field, l1_penalty=l1_penalty, l2_penalty=l2_penalty, averaged=averaged)(i)
         else:
             raise ValueError('Wrong type of field.')
 

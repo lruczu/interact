@@ -12,10 +12,12 @@ class DenseEmbedding(layers.Layer):
     def __init__(
         self,
         dense_field,
+        l1_penalty: float = 0,
         l2_penalty: float = 0,
         **kwargs,
     ):
         self._dense_field = dense_field
+        self._l1_penalty = l1_penalty
         self._l2_penalty = l2_penalty
 
         self._v = None
@@ -29,7 +31,7 @@ class DenseEmbedding(layers.Layer):
         self._v = self.add_weight('v',
                                   shape=[1, self._dense_field.d],
                                   initializer=initializers.glorot_uniform(),
-                                  regularizer=regularizers.l2(self._l2_penalty))
+                                  regularizer=regularizers.l1_l2(l1=self._l1_penalty, l2=self._l2_penalty))
         super(DenseEmbedding, self).build(input_shape)
 
     def call(self, input):

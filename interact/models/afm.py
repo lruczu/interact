@@ -1,7 +1,7 @@
 from typing import List
 
 import tensorflow as tf
-from tensorflow.keras.layers import Add
+from tensorflow.keras.layers import Activation, Add
 from tensorflow.keras.models import Model
 
 from interact.fields import Field, FieldsManager
@@ -10,8 +10,10 @@ from interact.layers import AddBias, AttentionAFM, Cartesian, Product
 
 def AFM(
     fields: List[Field],
+    l1_penalty: float = 0,
     l2_penalty: float = 0,
-    t: int = 10
+    t: int = 10,
+    activation: Activation = Activation('relu'),
 ):
     """
     Args:
@@ -24,7 +26,7 @@ def AFM(
 
     # [(None, d), (None, d), ..]
     embeddings = [
-        tf.squeeze(FieldsManager.input2embedding(i, field, l2_penalty=l2_penalty, averaged=True), axis=1)
+        tf.squeeze(FieldsManager.input2embedding(i, field, l1_penalty=l1_penalty, l2_penalty=l2_penalty, averaged=True), axis=1)
         for i, field in zip(inputs, fields)
     ]
 
@@ -51,4 +53,6 @@ def AFM(
 
     y_afm = linear_part + interaction_part
 
-    return Model(inputs, y_afm)
+    output = activation(y_afm)
+
+    return Model(inputs, output)

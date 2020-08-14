@@ -1,7 +1,7 @@
 from typing import List
 
 import tensorflow as tf
-from tensorflow.keras.layers import Add, Flatten
+from tensorflow.keras.layers import Activation, Add, Flatten
 from tensorflow.keras.models import Model
 
 from interact.fields import Field, FieldsManager
@@ -13,6 +13,7 @@ def AutoInt(
     d_prime: int,
     h: int,
     l2_penalty: float = 0,
+    activation: Activation = Activation('relu'),
 ):
     FieldsManager.validate_fields(fields)
     inputs = FieldsManager.fields2inputs(fields)
@@ -31,4 +32,6 @@ def AutoInt(
         )
     )
 
-    return y_autoint
+    output = activation(y_autoint)
+
+    return Model(inputs, output)

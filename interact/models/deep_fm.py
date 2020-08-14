@@ -1,7 +1,7 @@
 from typing import List
 
 import tensorflow as tf
-from tensorflow.keras.layers import Add, Concatenate, Dense
+from tensorflow.keras.layers import Activation, Add, Concatenate, Dense
 from tensorflow.keras.models import Model
 
 from interact.fields import Field, FieldsManager
@@ -11,6 +11,7 @@ from interact.layers import AddBias, FMInteraction
 def DeepFM(
     fields: List[Field], 
     l2_penalty: float = 0,
+    activation: Activation = Activation('relu'),
 ):
     """
     Args:
@@ -40,6 +41,6 @@ def DeepFM(
     dnn_input = Concatenate()([tf.squeeze(e, axis=1) for e in embeddings])
 
     y_dnn = Dense(1)(Dense(10)(dnn_input))
-    output = y_fm + y_dnn
+    output = activation(y_fm + y_dnn)
 
     return Model(inputs, output)

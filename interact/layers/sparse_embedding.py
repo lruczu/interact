@@ -19,12 +19,14 @@ class SparseEmbedding(layers.Layer):
         self,
         sparse_field,
         averaged: bool = False,
+        l1_penalty: float = 0,
         l2_penalty: float = 0,
         flatten: bool = False,
         **kwargs,
     ):
         self._sparse_field = sparse_field
         self._averaged = averaged
+        self._l1_penalty = l1_penalty
         self._l2_penalty = l2_penalty
         self._flatten = flatten
 
@@ -41,7 +43,7 @@ class SparseEmbedding(layers.Layer):
                 input_dim=self._sparse_field.vocabulary_size + 1,
                 output_dim=self._sparse_field.d,
                 input_length=self._sparse_field.m,
-                embeddings_regularizer=regularizers.l2(self._l2_penalty)
+                embeddings_regularizer=regularizers.l1_l2(l1=self._l1_penalty, l2=self._l2_penalty)
             )
         self._mask = MaskEmbedding(
                 input_dim=self._sparse_field.vocabulary_size,

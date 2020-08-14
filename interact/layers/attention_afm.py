@@ -34,7 +34,7 @@ class AttentionAFM(layers.Layer):
             raise ValueError('Input shape must be equal to 3.')
         
         self._w = self.add_weight('w',
-            shape=[int(input_shape[2]), self._t],
+            shape=[int(input_shape[2]), self._t], # W = (k, t)
             initializer=initializers.glorot_uniform(),
         )
         self._b = self.add_weight('b',

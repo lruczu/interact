@@ -10,7 +10,7 @@ setup(
         'numpy==1.16.3',
         'pandas==0.24.1',
         #'sklearn==0.22.1',
-        'tensorflow==2.1.0'
+        'tensorflow==2.1.2'
    ],
    packages=[
         'interact',

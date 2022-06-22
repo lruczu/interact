@@ -7,7 +7,7 @@ setup(
    author='lruczu',
    author_email='lukasz.rucz@gmail.com',
    install_requires=[
-        'numpy==1.16.3',
+        'numpy==1.22.0',
         'pandas==0.24.1',
         #'sklearn==0.22.1',
         'tensorflow==2.1.0'
